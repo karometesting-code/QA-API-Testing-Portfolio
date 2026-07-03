@@ -84,6 +84,13 @@ QA-API-Testing-Portfolio
 │   ├── FakeStoreAPI.postman_environment.json
 │   └── DummyJSON.postman_environment.json
 │
+├── images
+│   ├── 01-fakestore-overview.png
+│   ├── 02-fakestore-tests.png
+│   ├── 03-dummyjson-overview.png
+│   ├── 04-authentication-tests.png
+│   └── 05-regression-folder.png
+│
 └── README.md
 ```
 
