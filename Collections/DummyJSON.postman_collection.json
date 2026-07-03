@@ -1,0 +1,1440 @@
+{
+  "info": {
+    "_postman_id": "920a8438-5027-4c64-a38d-f00dcadd360f",
+    "name": "DummyJSON",
+    "description": "Manual QA API Testing Portfolio - DummyJSON\n\nThis collection demonstrates authentication testing techniques using the DummyJSON REST API.\n\nFeatures covered:  \n• Login authentication  \n• JWT Bearer Token handling  \n• Request chaining  \n• Data-driven testing (CSV/JSON)  \n• Positive testing  \n• Negative testing  \n• Response validation  \n• JSON Schema validation  \n• Collection and environment variables\n\nThe purpose of this collection is to demonstrate API testing practices commonly used in professional QA environments.\n\nAuthor: Karen Romero",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56288202",
+    "_collection_link": "https://go.postman.co/collection/56288202-920a8438-5027-4c64-a38d-f00dcadd360f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "✅ Positive",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "const Ajv = require(\"ajv\");\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Schema Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "const schema = JSON.parse(pm.collectionVariables.get(\"LoginResponseSchema\"));\r",
+                  "\r",
+                  "const ajv = new Ajv();\r",
+                  "\r",
+                  "pm.test(\"Response matches Login schema\", () => {\r",
+                  "\r",
+                  "    const valid = ajv.validate(schema, response);\r",
+                  "\r",
+                  "    if (!valid) {\r",
+                  "        console.log(ajv.errors);\r",
+                  "    }\r",
+                  "\r",
+                  "    pm.expect(valid).to.be.true;\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Business Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"User ID is positive\", () => {\r",
+                  "    pm.expect(response.id).to.be.above(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username is returned\", () => {\r",
+                  "    pm.expect(response.username).to.not.be.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email is returned\", () => {\r",
+                  "    pm.expect(response.email).to.include(\"@\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Access Token is returned\", () => {\r",
+                  "    pm.expect(response.accessToken).to.be.a(\"string\");\r",
+                  "    pm.expect(response.accessToken.length).to.be.above(20);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Refresh Token is returned\", () => {\r",
+                  "    pm.expect(response.refreshToken).to.be.a(\"string\");\r",
+                  "    pm.expect(response.refreshToken.length).to.be.above(20);\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Store Collection Variables\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"accessToken\", response.accessToken);\r",
+                  "pm.collectionVariables.set(\"refreshToken\", response.refreshToken);\r",
+                  "pm.collectionVariables.set(\"userId\", response.id);\r",
+                  "pm.collectionVariables.set(\"username\", response.username);\r",
+                  "pm.collectionVariables.set(\"email\", response.email);\r",
+                  "pm.collectionVariables.set(\"firstName\", response.firstName);\r",
+                  "pm.collectionVariables.set(\"lastName\", response.lastName);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"emilys\",\r\n    \"password\": \"emilyspass\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates a user using valid credentials.\n\nThis request validates the login endpoint and verifies that a valid JWT access token and refresh token are returned.\n\nThe request also stores authentication data in collection variables for use in subsequent requests.\n\nExpected Result:  \n• HTTP 200 OK  \n• Valid JWT access token  \n• Refresh token  \n• User information returned"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const user = pm.response.json();\r",
+                  "const Ajv = require(\"ajv\");\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Schema Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "const schema = JSON.parse(pm.collectionVariables.get(\"CurrentUserResponseSchema\"));\r",
+                  "const ajv = new Ajv();\r",
+                  "\r",
+                  "pm.test(\"Response matches schema\", () => {\r",
+                  "\r",
+                  "    const valid = ajv.validate(schema, user);\r",
+                  "\r",
+                  "    if (!valid) {\r",
+                  "        console.log(ajv.errors);\r",
+                  "    }\r",
+                  "\r",
+                  "    pm.expect(valid).to.be.true;\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Business Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Returned user ID matches authenticated user\", () => {\r",
+                  "    pm.expect(user.id)\r",
+                  "        .to.equal(Number(pm.collectionVariables.get(\"userId\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username matches Login response\", () => {\r",
+                  "    pm.expect(user.username)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"username\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email matches Login response\", () => {\r",
+                  "    pm.expect(user.email)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"email\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"First name matches Login response\", () => {\r",
+                  "    pm.expect(user.firstName)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"firstName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Last name matches Login response\", () => {\r",
+                  "    pm.expect(user.lastName)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"lastName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Image contains a valid URL\", () => {\r",
+                  "    pm.expect(user.image)\r",
+                  "        .to.match(/^https?:\\/\\/.+/);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email contains '@'\", () => {\r",
+                  "    pm.expect(user.email)\r",
+                  "        .to.include(\"@\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User ID is a positive integer\", () => {\r",
+                  "    pm.expect(user.id).to.be.above(0);\r",
+                  "    pm.expect(Number.isInteger(user.id)).to.be.true;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Retrieves the profile information of the currently authenticated user.\n\nThis request validates that the JWT access token generated during the login process is accepted and returns the expected user information.\n\nThe request also verifies that the authenticated user matches the data returned by the Login request.\n\nExpected Result:  \n• HTTP 200 OK  \n• Valid authenticated user information  \n• Returned user matches the authenticated session"
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains positive test scenarios that verify the expected behavior of the authentication endpoints using valid input data."
+    },
+    {
+      "name": "❌ Negative",
+      "item": [
+        {
+          "name": "Invalid Username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", () => {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct error message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Invalid credentials\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"thisUserDoesNotExist\",\r\n    \"password\": \"emilyspass\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to authenticate using a username that does not exist.\n\nExpected Result:  \n• Authentication fails.  \n• Appropriate HTTP status code is returned.  \n• Error message indicates invalid credentials."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", () => {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct error message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Invalid credentials\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"emilys\",\r\n    \"password\": \"WrongPassword123\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to authenticate using a valid username and an invalid password.\n\nExpected Result:  \n• Authentication fails.  \n• HTTP 400 Bad Request is returned.  \n• Error message indicates invalid credentials."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", () => {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct validation message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Username and password required\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"password\": \"emilyspass\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to authenticate without providing the required username.\n\nExpected Result:  \n• Authentication fails.  \n• HTTP 400 Bad Request is returned.  \n• Error message indicates that both username and password are required."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", () => {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct validation message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Username and password required\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"emilys\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to authenticate without providing the required password.\n\nExpected Result:  \n• Authentication fails.  \n• HTTP 400 Bad Request is returned.  \n• Error message indicates that both username and password are required."
+          },
+          "response": []
+        },
+        {
+          "name": "Empty Request Body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", () => {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct validation message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Username and password required\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to authenticate without providing any credentials.\n\nExpected Result:  \n• Authentication fails.  \n• HTTP 400 Bad Request is returned.  \n• Error message indicates that both username and password are required."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Bearer Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", () => {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response indicates unauthorized access\", () => {\r",
+                  "    pm.expect(response.message.toLowerCase())\r",
+                  "        .to.include(\"invalid\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "invalid",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Attempts to access a protected endpoint without providing a valid Bearer token.\n\nExpected Result:  \n• HTTP 401 Unauthorized is returned.  \n• Access to the protected resource is denied.  \n• Error message indicates that authentication is required or the token is invalid."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Bearer Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", () => {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct error message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Invalid/Expired Token!\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": " Bearer InvalidToken123456789",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Attempts to access a protected endpoint using an invalid Bearer token.\n\nExpected Result:  \n• HTTP 401 Unauthorized is returned.  \n• Access to the protected resource is denied.  \n• Error message indicates that the provided token is invalid or expired."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid HTTP Method",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 404\", () => {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is HTML\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"text/html\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "const body = pm.response.text();\r",
+                  "\r",
+                  "pm.test(\"Response body is not empty\", () => {\r",
+                  "    pm.expect(body).to.not.be.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response indicates unsupported DELETE route\", () => {\r",
+                  "    pm.expect(body)\r",
+                  "        .to.include(\"Cannot DELETE /auth/login\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"emilys\",\r\n    \"password\": \"emilyspass\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to invoke the login endpoint using an unsupported HTTP method (DELETE).\n\nExpected Result:  \n• The request is rejected.  \n• HTTP 404 Not Found is returned by the API.  \n• The response indicates that the DELETE route is not implemented."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains negative test scenarios that validate error handling, input validation, and authentication failures using invalid or missing data."
+    },
+    {
+      "name": "🔁 Data Driven",
+      "item": [
+        {
+          "name": "Login - CSV",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const expectedStatus = Number(pm.iterationData.get(\"expectedStatus\"));\r",
+                  "\r",
+                  "pm.test(`Status code is ${expectedStatus}`, () => {\r",
+                  "    pm.expect(pm.response.code).to.equal(expectedStatus);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "if (expectedStatus === 200) {\r",
+                  "\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.test(\"Access token is returned\", () => {\r",
+                  "        pm.expect(response).to.have.property(\"accessToken\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Refresh token is returned\", () => {\r",
+                  "        pm.expect(response).to.have.property(\"refreshToken\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Username matches input\", () => {\r",
+                  "        pm.expect(response.username)\r",
+                  "            .to.equal(pm.iterationData.get(\"csvUsername\"));\r",
+                  "    });\r",
+                  "\r",
+                  "} else {\r",
+                  "\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.test(\"Error message is returned\", () => {\r",
+                  "        pm.expect(response).to.have.property(\"message\");\r",
+                  "    });\r",
+                  "\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"{{csvUsername}}\",\r\n    \"password\": \"{{csvPassword}}\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates users using credentials supplied by an external CSV file.\n\nEach row is executed as an independent test case, allowing positive and negative login scenarios to be validated in a single collection run.\n\nExpected Result:  \n• Valid credentials return HTTP 200.  \n• Invalid credentials return HTTP 400."
+          },
+          "response": []
+        }
+      ],
+      "description": "Executes the same API request using multiple datasets from external CSV and JSON files.\n\nDemonstrates efficient test execution, reusable test scripts, and validation of multiple scenarios without duplicating requests."
+    },
+    {
+      "name": "🧪 Regression",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "const Ajv = require(\"ajv\");\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Schema Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "const schema = JSON.parse(pm.collectionVariables.get(\"LoginResponseSchema\"));\r",
+                  "\r",
+                  "const ajv = new Ajv();\r",
+                  "\r",
+                  "pm.test(\"Response matches Login schema\", () => {\r",
+                  "\r",
+                  "    const valid = ajv.validate(schema, response);\r",
+                  "\r",
+                  "    if (!valid) {\r",
+                  "        console.log(ajv.errors);\r",
+                  "    }\r",
+                  "\r",
+                  "    pm.expect(valid).to.be.true;\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Business Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"User ID is positive\", () => {\r",
+                  "    pm.expect(response.id).to.be.above(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username is returned\", () => {\r",
+                  "    pm.expect(response.username).to.not.be.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email is returned\", () => {\r",
+                  "    pm.expect(response.email).to.include(\"@\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Access Token is returned\", () => {\r",
+                  "    pm.expect(response.accessToken).to.be.a(\"string\");\r",
+                  "    pm.expect(response.accessToken.length).to.be.above(20);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Refresh Token is returned\", () => {\r",
+                  "    pm.expect(response.refreshToken).to.be.a(\"string\");\r",
+                  "    pm.expect(response.refreshToken.length).to.be.above(20);\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Store Collection Variables\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"accessToken\", response.accessToken);\r",
+                  "pm.collectionVariables.set(\"refreshToken\", response.refreshToken);\r",
+                  "pm.collectionVariables.set(\"userId\", response.id);\r",
+                  "pm.collectionVariables.set(\"username\", response.username);\r",
+                  "pm.collectionVariables.set(\"email\", response.email);\r",
+                  "pm.collectionVariables.set(\"firstName\", response.firstName);\r",
+                  "pm.collectionVariables.set(\"lastName\", response.lastName);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"emilys\",\r\n    \"password\": \"emilyspass\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates a user using valid credentials.\n\nThis request validates the login endpoint and verifies that a valid JWT access token and refresh token are returned.\n\nThe request also stores authentication data in collection variables for use in subsequent requests.\n\nExpected Result:  \n• HTTP 200 OK  \n• Valid JWT access token  \n• Refresh token  \n• User information returned"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const user = pm.response.json();\r",
+                  "const Ajv = require(\"ajv\");\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Schema Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "const schema = JSON.parse(pm.collectionVariables.get(\"CurrentUserResponseSchema\"));\r",
+                  "const ajv = new Ajv();\r",
+                  "\r",
+                  "pm.test(\"Response matches schema\", () => {\r",
+                  "\r",
+                  "    const valid = ajv.validate(schema, user);\r",
+                  "\r",
+                  "    if (!valid) {\r",
+                  "        console.log(ajv.errors);\r",
+                  "    }\r",
+                  "\r",
+                  "    pm.expect(valid).to.be.true;\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Business Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Returned user ID matches authenticated user\", () => {\r",
+                  "    pm.expect(user.id)\r",
+                  "        .to.equal(Number(pm.collectionVariables.get(\"userId\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Username matches Login response\", () => {\r",
+                  "    pm.expect(user.username)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"username\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email matches Login response\", () => {\r",
+                  "    pm.expect(user.email)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"email\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"First name matches Login response\", () => {\r",
+                  "    pm.expect(user.firstName)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"firstName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Last name matches Login response\", () => {\r",
+                  "    pm.expect(user.lastName)\r",
+                  "        .to.equal(pm.collectionVariables.get(\"lastName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Image contains a valid URL\", () => {\r",
+                  "    pm.expect(user.image)\r",
+                  "        .to.match(/^https?:\\/\\/.+/);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Email contains '@'\", () => {\r",
+                  "    pm.expect(user.email)\r",
+                  "        .to.include(\"@\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"User ID is a positive integer\", () => {\r",
+                  "    pm.expect(user.id).to.be.above(0);\r",
+                  "    pm.expect(Number.isInteger(user.id)).to.be.true;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Retrieves the profile information of the currently authenticated user.\n\nThis request validates that the JWT access token generated during the login process is accepted and returns the expected user information.\n\nThe request also verifies that the authenticated user matches the data returned by the Login request.\n\nExpected Result:  \n• HTTP 200 OK  \n• Valid authenticated user information  \n• Returned user matches the authenticated session"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Password Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 400\", () => {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct error message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Invalid credentials\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"emilys\",\r\n    \"password\": \"WrongPassword123\",\r\n    \"expiresInMins\": 30\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Attempts to authenticate using a valid username and an invalid password.\n\nExpected Result:  \n• Authentication fails.  \n• HTTP 400 Bad Request is returned.  \n• Error message indicates invalid credentials."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Bearer Token Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Response Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Status code is 401\", () => {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is within SLA\", () => {\r",
+                  "    pm.expect(pm.response.responseTime)\r",
+                  "        .to.be.below(Number(pm.collectionVariables.get(\"responseTimeSLA\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is application/json\", () => {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\"))\r",
+                  "        .to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "/* ===========================================================\r",
+                  "   Error Validation\r",
+                  "=========================================================== */\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", () => {\r",
+                  "    pm.expect(response).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is a string\", () => {\r",
+                  "    pm.expect(response.message).to.be.a(\"string\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Correct error message is returned\", () => {\r",
+                  "    pm.expect(response.message)\r",
+                  "        .to.equal(\"Invalid/Expired Token!\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": " Bearer InvalidToken123456789",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Attempts to access a protected endpoint using an invalid Bearer token.\n\nExpected Result:  \n• HTTP 401 Unauthorized is returned.  \n• Access to the protected resource is denied.  \n• Error message indicates that the provided token is invalid or expired."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains regression test suites used to verify that existing authentication functionality continues to work correctly after system changes or deployments."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "responseTimeSLA",
+      "value": "",
+      "description": "Maximum allowed response time (ms)"
+    },
+    {
+      "key": "accessToken",
+      "secret": true
+    },
+    {
+      "key": "refreshToken",
+      "secret": true
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "description": "Logged-in user ID"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "description": "Email to obtain auth token"
+    },
+    {
+      "key": "email",
+      "value": "",
+      "description": "Password to obtain auth token"
+    },
+    {
+      "key": "firstName",
+      "value": "",
+      "description": "Authenticated user's first name returned after a successful login."
+    },
+    {
+      "key": "lastName",
+      "value": "",
+      "description": "Authenticated user's last name returned after a successful login."
+    },
+    {
+      "key": "LoginResponseSchema",
+      "value": "",
+      "description": "JSON Schema for Login response"
+    },
+    {
+      "key": "CurrentUserResponseSchema",
+      "value": "",
+      "description": "JSON Schema used to validate the Get Current User response."
+    }
+  ]
+}
