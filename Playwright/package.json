@@ -1,0 +1,23 @@
+{
+  "name": "saucedemo-playwright-tests",
+  "version": "1.0.0",
+  "description": "End-to-end UI test automation for SauceDemo (login, cart, checkout) using Playwright + TypeScript and the Page Object Model.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:chromium": "playwright test --project=chromium",
+    "test:login": "playwright test tests/login.spec.ts",
+    "test:cart": "playwright test tests/cart.spec.ts",
+    "test:checkout": "playwright test tests/checkout.spec.ts",
+    "report": "playwright show-report"
+  },
+  "keywords": ["playwright", "typescript", "e2e", "qa-automation", "page-object-model"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.3.0",
+    "typescript": "^7.0.2"
+  }
+}

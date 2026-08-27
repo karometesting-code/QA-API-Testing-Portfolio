@@ -1,133 +1,40 @@
-# QA API Testing Portfolio
+# Karen Romero — QA Engineer Portfolio
 
-Professional API testing portfolio built with **Postman**, showcasing functional testing, negative testing, authentication, regression testing, and automated API validations.
+![ISTQB Foundation Level Certified](https://img.shields.io/badge/ISTQB-Foundation%20Level%20Certified-2ea44f?style=flat-square)
 
----
+QA Engineer, **ISTQB Foundation Level Certified**, with hands-on experience across the **full testing lifecycle**: manual test design, API testing, UI test automation, and Agile QA process ownership (Jira + Xray).
 
-## Overview
+This repository brings together three practical projects, each demonstrating a different, complementary QA skill set — from writing a test plan and reporting a defect through to shipping an automated regression suite.
 
-This repository contains API testing projects created to demonstrate practical QA skills commonly used in software testing and quality assurance roles.
-
-The collections include:
-
-- Functional API Testing
-- Negative Testing
-- Regression Testing
-- JWT Authentication
-- Request Chaining
-- JSON Schema Validation (AJV)
-- Response Time Validation
-- Collection & Environment Variables
-- Automated Postman Tests
+📫 **Contact:** [GitHub](https://github.com/karometesting-code) · karometesting@gmail.com
 
 ---
 
-# Projects
+## 📁 Projects
 
-## 🛒 Fake Store API Testing
+### 🧪 [Playwright](Playwright/) — UI Test Automation
+End-to-end automation of the SauceDemo purchase flow (login, cart, checkout) using **Playwright + TypeScript**, with a Page Object Model architecture, custom fixtures, and cross-browser coverage (Chromium, Firefox, WebKit). 42 tests, positive and negative scenarios, plus a business-rule assertion validating order totals.
 
-Comprehensive CRUD testing of the Fake Store API.
+### 📮 [Postman Api Testing](Postman%20Api%20Testing/) — API Testing
+Functional, negative, and regression testing of REST APIs (Fake Store API, DummyJSON) using **Postman**: CRUD coverage, JWT authentication, request chaining, JSON schema validation (AJV), and response time checks.
 
-### Features
-
-- Get All Products
-- Get Product by ID
-- Create Product
-- Update Product
-- Delete Product
-- Positive Test Suite
-- Negative Test Suite
-- Regression Suite
+### 📋 [Jira](Jira/) — Manual QA & Agile Process
+A full sprint cycle run in a live **Jira Cloud + Xray** project against the same SauceDemo application: sprint planning with story points and entry/exit criteria, manual test execution, a real defect found through exploratory testing, developer handoff via a custom workflow, and a targeted retest to close it out.
 
 ---
 
-## 🔐 DummyJSON Authentication Testing
+## 🎯 Core Skills
 
-Authentication-focused API testing using DummyJSON.
+- **Manual Testing** — test case design, exploratory testing, sprint planning, defect reporting with full reproduction steps and evidence
+- **Test Automation** — API and UI automation, Page Object Model, custom test fixtures, cross-browser execution
+- **API Testing** — CRUD validation, authentication (JWT), schema validation, regression suites
+- **Agile QA** — Scrum ceremonies, Jira/Xray test management, story-to-defect traceability, dev/QA handoff workflows
+- **Testing types** — functional, negative, regression, exploratory
 
-### Features
+## 🛠️ Tech Stack
 
-- Login
-- Get Current User
-- JWT Authentication
-- Bearer Token Validation
-- Invalid Credentials Testing
-- Invalid Token Testing
-- Missing Token Testing
-- Regression Suite
+`Playwright` · `TypeScript` · `Postman` · `Jira Cloud` · `Xray` · `JavaScript` · `JSON` · `Git` / `GitHub`
 
 ---
 
-# Technologies
-
-- Postman
-- REST APIs
-- JavaScript
-- JSON
-- AJV Schema Validation
-- JWT Authentication
-- Git
-- GitHub
-
----
-
-# Repository Structure
-
-```
-QA-API-Testing-Portfolio
-
-├── collections
-│   ├── FakeStoreAPI.postman_collection.json
-│   └── DummyJSON.postman_collection.json
-│
-├── environments
-│   ├── FakeStoreAPI.postman_environment.json
-│   └── DummyJSON.postman_environment.json
-│
-├── images
-│   ├── 01-fakestore-overview.png
-│   ├── 02-fakestore-tests.png
-│   ├── 03-dummyjson-overview.png
-│   ├── 04-authentication-tests.png
-│   └── 05-regression-folder.png
-│
-└── README.md
-```
-
----
-
-# Skills Demonstrated
-
-- REST API Testing
-- CRUD Operations
-- Authentication Testing
-- JWT Token Handling
-- Request Chaining
-- Collection Variables
-- Environment Variables
-- JSON Schema Validation
-- Functional Testing
-- Negative Testing
-- Regression Testing
-- Response Time Validation
-- Test Automation using Postman Scripts
-
----
-
-# How to Use
-
-1. Clone or download this repository.
-2. Import the desired Postman collection.
-3. Import the corresponding Postman environment.
-4. Select the environment.
-5. Execute the requests individually or run the complete collection using the Collection Runner.
-
----
-
-# Author
-
-**Karen Romero**
-
-QA Engineer Portfolio
-
-GitHub: https://github.com/karometesting-code
+Each folder above has its own README with full details, screenshots, and instructions to run or review the work.
