@@ -4,7 +4,7 @@
 
 QA Engineer, **ISTQB Foundation Level Certified**, with hands-on experience across the **full testing lifecycle**: manual test design, API testing, UI test automation, and Agile QA process ownership (Jira + Xray).
 
-This repository brings together three practical projects, each demonstrating a different, complementary QA skill set — from writing a test plan and reporting a defect through to shipping an automated regression suite.
+This repository brings together three practical projects, each demonstrating a different, complementary QA skill set — from writing a test plan and reporting a defect through to shipping a full UI + API + performance automation suite with CI/CD.
 
 📫 **Contact:** [GitHub](https://github.com/karometesting-code) · karometesting@gmail.com
 
@@ -12,8 +12,8 @@ This repository brings together three practical projects, each demonstrating a d
 
 ## 📁 Projects
 
-### 🧪 [Playwright](Playwright/) — UI Test Automation
-End-to-end automation of the SauceDemo purchase flow (login, cart, checkout) using **Playwright + TypeScript**, with a Page Object Model architecture, custom fixtures, and cross-browser coverage (Chromium, Firefox, WebKit). 42 tests, positive and negative scenarios, plus a business-rule assertion validating order totals.
+### 🧪 [Playwright Automation Suite](Playwright-Automation-Suite/) — UI + API + Performance + CI/CD
+End-to-end QA automation suite covering the full testing lifecycle on two real applications: **UI** automation of the SauceDemo purchase flow (dynamic product selection by price, cart management, checkout with a business-rule assertion on order totals) with **Playwright + TypeScript**, Page Object Model, and cross-browser coverage (Chromium, Firefox, WebKit); **API** automation of the Restful Booker CRUD lifecycle; a **performance** load test with **k6**; and a **GitHub Actions** CI/CD pipeline publishing test reports as artifacts. Originally built as a technical assessment for Ceiba, then run end-to-end against the real applications — which surfaced and fixed two real synchronization defects in the automation itself (documented in the project's findings report) — and folded into this portfolio.
 
 ### 📮 [Postman Api Testing](Postman%20Api%20Testing/) — API Testing
 Functional, negative, and regression testing of REST APIs (Fake Store API, DummyJSON) using **Postman**: CRUD coverage, JWT authentication, request chaining, JSON schema validation (AJV), and response time checks.
@@ -28,12 +28,14 @@ A full sprint cycle run in a live **Jira Cloud + Xray** project against the same
 - **Manual Testing** — test case design, exploratory testing, sprint planning, defect reporting with full reproduction steps and evidence
 - **Test Automation** — API and UI automation, Page Object Model, custom test fixtures, cross-browser execution
 - **API Testing** — CRUD validation, authentication (JWT), schema validation, regression suites
+- **Performance Testing** — load test design and execution (k6), P90/P95/throughput analysis
+- **CI/CD** — GitHub Actions pipelines with automated reporting and pass/fail gating
 - **Agile QA** — Scrum ceremonies, Jira/Xray test management, story-to-defect traceability, dev/QA handoff workflows
-- **Testing types** — functional, negative, regression, exploratory
+- **Testing types** — functional, negative, regression, exploratory, performance
 
 ## 🛠️ Tech Stack
 
-`Playwright` · `TypeScript` · `Postman` · `Jira Cloud` · `Xray` · `JavaScript` · `JSON` · `Git` / `GitHub`
+`Playwright` · `TypeScript` · `k6` · `GitHub Actions` · `Postman` · `Jira Cloud` · `Xray` · `JavaScript` · `JSON` · `Git` / `GitHub`
 
 ---
 

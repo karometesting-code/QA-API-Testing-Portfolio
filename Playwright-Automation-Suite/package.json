@@ -1,0 +1,21 @@
+{
+  "name": "playwright-automation-suite",
+  "version": "1.0.0",
+  "description": "Suite de automatización QA: UI + API (Playwright/TypeScript), performance (k6) y pipeline CI/CD (GitHub Actions)",
+  "private": true,
+  "scripts": {
+    "test:ui": "playwright test ui/tests --project=ui-chromium",
+    "test:ui:all-browsers": "playwright test ui/tests --project=ui-chromium --project=ui-firefox --project=ui-webkit",
+    "test:api": "playwright test api/tests --project=api-restful-booker",
+    "test:all": "playwright test --project=ui-chromium --project=api-restful-booker",
+    "test:headed": "playwright test ui/tests --project=ui-chromium --headed",
+    "test:report": "playwright show-report reports/html-report",
+    "typecheck": "tsc --noEmit",
+    "perf:booking": "k6 run performance/load-test-booking.js --out json=reports/performance/k6-result.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.6.0"
+  }
+}

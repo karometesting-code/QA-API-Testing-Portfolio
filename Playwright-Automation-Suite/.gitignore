@@ -1,0 +1,9 @@
+node_modules/
+reports/html-report/
+reports/junit/
+reports/performance/*.json
+test-results/
+playwright-report/
+.tools/
+.env
+*.log
