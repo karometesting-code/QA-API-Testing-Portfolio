@@ -15,11 +15,11 @@
 
 ## Objetivo de las pruebas
 
-Validar, mediante automatización mantenible, que:
-1. El flujo de compra de SauceDemo calcula correctamente sus montos (Subtotal + Impuesto = Total) y permite completar una compra de extremo a extremo.
-2. El carrito de SauceDemo refleja correctamente el estado tras agregar/eliminar productos y bloquea un checkout con datos incompletos.
-3. El ciclo de vida de una reserva en Restful Booker (crear, leer, actualizar, eliminar) funciona según su contrato documentado, incluyendo el manejo de errores (datos inexistentes, operaciones sin autenticación).
-4. El endpoint `GET /booking` sostiene una carga concurrente moderada (10 usuarios) dentro de tiempos de respuesta razonables.
+Validar, mediante automatización mantenible:
+1. El flujo de compra de SauceDemo calcula bien sus montos (Subtotal + Impuesto = Total) de extremo a extremo
+2. El carrito refleja el estado real tras agregar/eliminar productos y bloquea un checkout incompleto
+3. El ciclo de vida de una reserva en Restful Booker (CRUD) funciona según su contrato, incluyendo errores
+4. `GET /booking` sostiene una carga concurrente moderada (10 usuarios) en tiempos razonables
 
 ## Tipos de prueba considerados
 
@@ -59,11 +59,11 @@ Prioridad **Baja** (exploratorios / no automatizados en esta entrega, ver `02-ca
 
 ## Herramientas seleccionadas
 
-| Herramienta | Uso | Justificación |
+| Herramienta | Uso | Por qué |
 |---|---|---|
-| **Playwright + TypeScript** | UI y API | Un solo lenguaje y un solo framework para ambas suites, dentro del mismo repositorio y la misma configuración (`playwright.config.ts` con 2 proyectos). Auto-waiting nativo (cumple la prohibición de `Thread.sleep`), `APIRequestContext` cubre las pruebas de API sin herramienta adicional, y es la herramienta que ya uso en producción (coherencia con mi experiencia actual). |
-| **k6** | Rendimiento | Scripts en JavaScript (mismo ecosistema que el resto del repo), liviano, se integra de forma nativa en GitHub Actions, y da métricas P90/P95/throughput out-of-the-box sin la sobrecarga de una GUI como JMeter. |
-| **GitHub Actions** | CI/CD | Triggers nativos de push/PR, runners con navegadores preinstalables (`playwright install`) y acceso a internet real, publicación de artefactos integrada. |
+| **Playwright + TypeScript** | UI y API | Un solo framework para ambas capas, mismo repo y config. Auto-waiting nativo, `APIRequestContext` cubre API sin herramienta extra |
+| **k6** | Rendimiento | JS (mismo ecosistema del repo), liviano, integración nativa con GitHub Actions, métricas P90/P95/throughput out-of-the-box |
+| **GitHub Actions** | CI/CD | Triggers push/PR nativos, runners con navegadores preinstalables, artefactos integrados |
 
 ## Estrategia de automatización
 
@@ -102,8 +102,14 @@ Prueba ejecutada con k6 v2.2.0 contra `GET /booking`, con la configuración exac
 | Umbral P95 < 2500ms | ✅ cumplido (299.78 ms) |
 | Umbral de errores < 5% | ✅ cumplido (0.09%) |
 
-La única petición fallida registró `error_code 1101` ("lookup: no such host") — un fallo de resolución DNS del lado del cliente de prueba, no una respuesta de error del servidor (todas las demás 1137 peticiones devolvieron `200 OK`). Se descarta como defecto de la API; es ruido de red local, consistente con la inestabilidad intermitente de DNS observada en el entorno usado para esta ejecución durante toda la sesión de pruebas.
+La única petición fallida: `error_code 1101` ("lookup: no such host") — fallo de DNS del cliente de prueba, no del servidor (las otras 1137 devolvieron `200 OK`). No es un defecto de la API.
 
 **Respuesta formal — ¿el endpoint soporta adecuadamente la carga definida?**
 
-Sí. Con 10 usuarios virtuales sostenidos durante 2 minutos, `GET /booking` respondió con una mediana de ~220ms y un P95 de ~300ms, muy por debajo de umbrales razonables para una API REST de lectura (los umbrales de aceptación configurados, P90<1500ms/P95<2500ms, se cumplieron con holgura de más de 5x). La tasa de error real atribuible al servidor fue 0% — el único fallo fue de infraestructura de red del cliente, no del servicio. Dicho esto, dos matices importantes para una lectura honesta del resultado: (1) 10 VUs es una carga moderada — no permite concluir nada sobre el comportamiento del servicio bajo picos mucho mayores (100+ VUs) ni sobre su punto de quiebre; y (2) Restful Booker corre en un dyno gratuito de Heroku pensado para práctica, no en infraestructura productiva, por lo que estos resultados no son representativos de lo que debería exigirse a un servicio real en producción — son válidos únicamente como evidencia de que el servicio no se degrada de forma notoria bajo esta carga específica y acotada.
+**Sí.** Con 10 VUs sostenidos 2 minutos:
+- Mediana ~220ms, P95 ~300ms — ambos con holgura de más de 5x sobre los umbrales configurados (P90<1500ms/P95<2500ms)
+- 0% de error atribuible al servidor
+
+Dos matices para una lectura honesta:
+- 10 VUs es carga moderada — no dice nada sobre el comportamiento bajo picos mucho mayores (100+) ni sobre el punto de quiebre
+- Restful Booker corre en un dyno gratuito de Heroku (práctica, no producción) — el resultado prueba que no se degrada bajo esta carga puntual, no que cumpla estándares de un servicio productivo real

@@ -2,20 +2,43 @@
 
 ### 1. ¿Cuál fue el principal riesgo identificado?
 
-El riesgo que más se concretó no fue uno de los previstos en la estrategia inicial, sino uno que solo apareció al ejecutar la suite de verdad — y que además resultó más profundo de lo que parecía al principio. Las primeras condiciones de carrera encontradas (`DEF-01`/`DEF-02`) parecían resolverse esperando explícitamente antes de `locator.count()`. Pero al endurecer después la suite con una batería de estrés (`--repeat-each=10` en WebKit), apareció un defecto más fundamental (`DEF-06`, ver `03-reporte-hallazgos.md`): ni siquiera `page.waitForURL()` garantiza que la página destino haya terminado de renderizar su contenido — el navegador actualiza la URL casi al iniciar la navegación, no cuando termina. Eso explicaba tanto las lecturas con datos de la página anterior como, en su variante de escritura, un campo de formulario que se llenaba y perdía su valor silenciosamente por la hidratación de la página nueva. Esto confirma algo que vale la pena remarcar dos veces: una suite que nunca se ha corrido contra el sitio real puede "verse" correcta —código limpio, buena arquitectura— y aun así tener bugs de sincronización que solo salen a la luz con ejecución real y, más aún, con ejecución real *repetida bajo estrés*; una corrida verde una sola vez no es suficiente evidencia de que una condición de carrera está resuelta. El riesgo de infraestructura previsto (Heroku durmiendo, DNS inestable en el entorno de desarrollo) también se materializó parcialmente: una sola petición de las 1138 de la prueba de carga falló por un error de resolución DNS local, no del servidor.
+- No fue uno de los previstos en la planeación inicial, sino uno que solo apareció al ejecutar la suite de verdad: **condiciones de carrera reales** en los page objects (`DEF-01`, `DEF-02`, `DEF-06` — ver `03-reporte-hallazgos.md`)
+- El más profundo (`DEF-06`): `page.waitForURL()` no garantiza que la página destino haya terminado de renderizar
+- Lección clave: **código limpio no es lo mismo que código correcto** — una suite nunca ejecutada puede verse perfecta y aun así fallar contra el sitio real
+- Segunda lección: **una corrida verde no basta** — el fix de DEF-01/02 parecía suficiente hasta estresarlo con 10 repeticiones, donde apareció DEF-06
+- Riesgo de infraestructura previsto (Heroku dormido, DNS inestable) también se materializó parcialmente: 1 de 1138 peticiones de la prueba de carga falló por DNS local, no por el servidor
 
 ### 2. ¿Qué pruebas considera prioritarias para una regresión?
 
-TC-UI-01 (compra completa con validación de montos) y TC-API-01 (ciclo de vida completo de una reserva), porque cubren los flujos de negocio de extremo a extremo: si alguno falla, el sistema no cumple su función principal. Junto a estos, TC-UI-04 por validar tanto el estado del carrito como el manejo de errores de formulario — y porque fue, en la práctica, el caso que expuso los dos defectos de sincronización de la suite, lo que confirma que es un buen candidato a detectar regresiones silenciosas reales, no solo las de negocio.
+- **TC-UI-01** — compra completa con validación de montos (flujo de negocio de extremo a extremo)
+- **TC-API-01** — ciclo de vida completo de una reserva (idem, sobre la API)
+- **TC-UI-04** — carrito + manejo de errores; fue el caso que en la práctica expuso los defectos de sincronización, buena señal de que detecta regresiones silenciosas reales
 
 ### 3. ¿Qué pruebas adicionales automatizaría?
 
-Los casos diseñados pero no automatizados en esta entrega (TC-UI-03, TC-UI-05, TC-API-05 — ver `02-casos-de-prueba.md`), y TC-API-04 (validación de tipos en `totalprice`), que durante esta entrega se verificó manualmente y quedó confirmado como hallazgo (`DEF-03`) pero no se automatizó como assertion fija en la suite de CI, porque depende de un comportamiento de una API pública de terceros que podría cambiar sin aviso. También agregaría pruebas de contrato (JSON Schema) sobre las respuestas de Restful Booker para detectar cambios no documentados en la forma de la respuesta, y un caso de performance adicional sobre `POST /booking` (escritura), ya que el endpoint medido en esta entrega es de solo lectura.
+- Los casos diseñados pero no automatizados: TC-UI-03, TC-UI-05, TC-API-05 (ver `02-casos-de-prueba.md`)
+- **TC-API-04** (validación de tipos) — ya verificado manualmente como hallazgo confirmado (`DEF-03`), pero no fijado como assertion de CI porque depende de comportamiento de una API de terceros que podría cambiar
+- Pruebas de contrato (JSON Schema) sobre las respuestas de Restful Booker
+- Performance de `POST /booking` (escritura) — el endpoint medido en esta entrega es solo de lectura
 
 ### 4. ¿Qué oportunidades de mejora identifica en la solución desarrollada?
 
-Las mejoras más concretas ya se aplicaron durante esta misma entrega: todo método de page object que navega ahora espera además un elemento exclusivo de la página destino (no solo la URL, por `DEF-06`), y toda lectura de una lista de elementos usa `locator.evaluateAll()` en una sola llamada atómica en vez de `.count()` + un bucle de `.nth(i)` separados (`DEF-01`/`DEF-02`/`DEF-06`). Más allá de eso, agregaría reintentos controlados y un `expect.poll` para el warm-up de Restful Booker en el pipeline en vez de un `curl` manual previo, y separaría la ejecución de UI y API en jobs paralelos de CI (ya están en proyectos separados de Playwright, pero el pipeline actual los corre juntos en un solo job). También documentaría explícitamente, como regla de equipo, que ninguna acción de page object debe leer o escribir en la página inmediatamente después de disparar una navegación sin esperar primero un elemento exclusivo de la página destino — es la causa raíz común de los tres defectos de sincronización encontrados, y que una corrida verde única no es evidencia suficiente para dar por resuelta una condición de carrera: hace falta estresarla con repeticiones.
+Ya aplicadas durante esta misma entrega:
 
-### 5. Si estas pruebas fueran llevadas a un proyecto real, ¿qué mejoraría de la estrategia propuesta?
+- Toda navegación ahora espera un elemento **exclusivo de la página destino**, no solo la URL (`DEF-06`)
+- Toda lectura de listas usa `locator.evaluateAll()` (atómico) en vez de `.count()` + bucle (`DEF-01`/`DEF-02`/`DEF-06`)
+- `npm run typecheck` agregado localmente y en CI (`DEF-04`)
 
-Incorporaría datos de prueba gestionados por fixtures/factories con limpieza automática garantizada incluso si un test falla a mitad de camino (hoy el teardown de API depende de que el test llegue al paso de DELETE; en un proyecto real usaría un hook `afterEach` que elimine cualquier recurso creado, exitoso o no — así se limpió manualmente, por ejemplo, el booking usado para confirmar `DEF-03`). También definiría ambientes dedicados de prueba en vez de aplicaciones públicas compartidas, añadiría pruebas de accesibilidad básicas (axe-core) a la suite UI, y conectaría el reporte de hallazgos directamente a un sistema de tracking (Jira/Xray, que es lo que uso actualmente) en vez de un markdown, para que los defectos tengan trazabilidad real con el equipo de desarrollo. Por último, dado que la primera ejecución real encontró 2 defectos que una revisión de código por sí sola no habría detectado, reforzaría como política de equipo que ninguna suite de automatización se da por "entregada" sin al menos una corrida completa contra el ambiente real antes del code review final.
+Pendientes para una siguiente iteración:
+
+- `expect.poll` para el warm-up de Restful Booker en vez de un `curl` manual
+- Separar UI y API en jobs paralelos de CI (ya son proyectos separados de Playwright, pero el pipeline los corre juntos en un job)
+- Regla de equipo explícita: ninguna acción de page object debe leer/escribir justo después de disparar una navegación sin esperar primero un elemento exclusivo del destino
+
+### 5. Si estas pruebas fueran a un proyecto real, ¿qué mejoraría de la estrategia?
+
+- **Teardown garantizado**: hoy el teardown de API depende de que el test llegue al `DELETE`; usaría un hook `afterEach` que limpie cualquier recurso creado, exitoso o no
+- **Ambientes dedicados** en vez de aplicaciones públicas compartidas
+- **Accesibilidad básica** (axe-core) en la suite UI
+- **Trazabilidad real**: reporte de hallazgos conectado a Jira/Xray en vez de markdown
+- **Política de equipo**: ninguna suite se da por "entregada" sin al menos una corrida completa contra el ambiente real — en esta entrega, la ejecución real encontró 3 defectos de sincronización que una revisión de código no habría detectado
