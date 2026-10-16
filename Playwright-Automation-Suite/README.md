@@ -25,10 +25,27 @@ Detalle completo (riesgos, priorización, criterios entrada/salida) en [`documen
 
 ## Instalación y ejecución
 
+Este proyecto vive dentro de mi portafolio de QA (varios proyectos independientes en un solo repositorio), pero el repo completo pesa solo ~2.4 MB — clonarlo no implica descargar nada pesado, y correr este proyecto no toca ninguna de las otras carpetas.
+
 ```bash
+git clone https://github.com/karometesting-code/QA-API-Testing-Portfolio.git
+cd QA-API-Testing-Portfolio/Playwright-Automation-Suite
+
 npm install
 npx playwright install --with-deps chromium firefox webkit
 ```
+
+<details>
+<summary>Si solo quieres esta carpeta (sin el resto del portafolio)</summary>
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/karometesting-code/QA-API-Testing-Portfolio.git
+cd QA-API-Testing-Portfolio
+git sparse-checkout set Playwright-Automation-Suite
+cd Playwright-Automation-Suite
+```
+
+</details>
 
 No requiere variables de entorno: SauceDemo y Restful Booker usan credenciales públicas de práctica, ya incluidas en el código.
 
