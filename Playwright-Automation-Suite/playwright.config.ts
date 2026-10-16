@@ -20,6 +20,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
+  // SauceDemo marca sus elementos de prueba con `data-test` (no el `data-testid`
+  // que Playwright usa por defecto). Configurarlo aquí permite usar el locator
+  // integrado `getByTestId()` en vez de selectores manuales `[data-test="..."]`
+  // — ver README, sección "Estrategia de locators", para el criterio completo.
+  use: { testIdAttribute: 'data-test' },
   reporter: [
     ['list'],
     ['html', { outputFolder: 'reports/html-report', open: 'never' }],

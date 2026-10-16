@@ -15,16 +15,21 @@ export class CheckoutPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.firstNameInput = page.locator('[data-test="firstName"]');
-    this.lastNameInput = page.locator('[data-test="lastName"]');
-    this.postalCodeInput = page.locator('[data-test="postalCode"]');
-    this.continueButton = page.locator('[data-test="continue"]');
-    this.finishButton = page.locator('[data-test="finish"]');
-    this.errorMessage = page.locator('[data-test="error"]');
-    this.subtotalLabel = page.locator('.summary_subtotal_label');
-    this.taxLabel = page.locator('.summary_tax_label');
-    this.totalLabel = page.locator('.summary_total_label');
-    this.completeHeader = page.locator('.complete-header');
+    // Los 3 inputs tienen aria-label propio (First Name / Last Name /
+    // Zip/Postal Code) — getByLabel por encima de [data-test="..."].
+    this.firstNameInput = page.getByLabel('First Name');
+    this.lastNameInput = page.getByLabel('Last Name');
+    this.postalCodeInput = page.getByLabel('Zip/Postal Code');
+    // Ambos son <input type="submit">/<button> con nombre accesible propio.
+    this.continueButton = page.getByRole('button', { name: 'Continue' });
+    this.finishButton = page.getByRole('button', { name: 'Finish' });
+    this.errorMessage = page.getByRole('alert');
+    // Los montos no tienen rol propio (son <div> de texto): getByTestId.
+    this.subtotalLabel = page.getByTestId('subtotal-label');
+    this.taxLabel = page.getByTestId('tax-label');
+    this.totalLabel = page.getByTestId('total-label');
+    // Es un <h2>: heading de nivel 2, único en la página de confirmación.
+    this.completeHeader = page.getByRole('heading', { level: 2 });
   }
 
   async fillInfo(firstName: string, lastName: string, postalCode: string) {

@@ -1,6 +1,6 @@
 # Playwright Automation Suite — UI + API + Performance + CI/CD
 
-Suite de automatización end-to-end: pruebas UI y API con Playwright, pruebas de rendimiento con k6, e integración continua con GitHub Actions. Construida originalmente como prueba técnica de QA para Ceiba (ver `documentation/`) y ampliada para formar parte de mi portafolio: cubre el ciclo completo de aseguramiento de calidad — planeación, diseño de casos, automatización UI/API, performance, CI/CD y reporte formal de hallazgos — en un único repositorio.
+Suite de automatización end-to-end: pruebas UI y API con Playwright, pruebas de rendimiento con k6, e integración continua con GitHub Actions. Cubre el ciclo completo de aseguramiento de calidad — planeación, diseño de casos, automatización UI/API, performance, CI/CD y reporte formal de hallazgos — en un único repositorio.
 
 ## Descripción del proyecto
 
@@ -9,7 +9,7 @@ Suite de automatización end-to-end: pruebas UI y API con Playwright, pruebas de
 - **Performance**: k6, prueba de carga sobre `GET /booking` (10 VUs, ramp-up 30s, duración 2min).
 - **Pipeline**: GitHub Actions, triggers en `push` y `pull_request`, dos jobs (tests funcionales y performance), con reportes publicados como artefactos.
 
-Esta suite se ejecutó de punta a punta contra los sitios reales (no solo se escribió y se asumió correcta) — ver la sección **Resultados** más abajo para los números reales de la última corrida, incluyendo dos defectos de sincronización encontrados y corregidos durante esa ejecución.
+Esta suite se ejecutó de punta a punta contra los sitios reales — ver la sección **Resultados** más abajo para los números reales de la última corrida, incluyendo dos defectos de sincronización encontrados y corregidos durante esa ejecución.
 
 ## Herramientas utilizadas
 
@@ -74,8 +74,9 @@ npm run perf:booking
 
 ### UI
 
-- **36/36 tests en verde** en Chromium, Firefox y WebKit (12 tests × 3 navegadores): Flujo 1, Flujo 2, login (4 casos) y carrito/checkout complementario (6 casos).
-- La primera corrida real encontró y corrigió **2 defectos de sincronización** en los page objects (`DEF-01`, `DEF-02` — ver [`documentation/03-reporte-hallazgos.md`](documentation/03-reporte-hallazgos.md)): lecturas de carrito/catálogo con `locator.count()` inmediatamente después de una navegación, sin esperar a que el DOM terminara de renderizar. Intermitente en Chromium, consistente (3/3) en WebKit. Corregido con esperas explícitas (`waitForURL`, `locator.first().waitFor(...)`).
+- **39/39 tests en verde** en Chromium, Firefox y WebKit (13 tests × 3 navegadores): Flujo 1, Flujo 2, login (4 casos) y carrito/checkout complementario (6 casos).
+- La primera corrida real encontró y corrigió **2 defectos de sincronización** en los page objects (`DEF-01`, `DEF-02` — ver [`documentation/03-reporte-hallazgos.md`](documentation/03-reporte-hallazgos.md)): lecturas de carrito/catálogo con `locator.count()` inmediatamente después de una navegación, sin esperar a que el DOM terminara de renderizar. Intermitente en Chromium, consistente (3/3) en WebKit. Corregido con esperas explícitas.
+- Al refactorizar los locators para priorizar `getByRole`/`getByTestId` (ver sección "Estrategia de locators"), una batería de estrés (`--workers=1 --repeat-each=10` en WebKit) expuso un defecto más profundo (`DEF-06`): `page.waitForURL()` puede resolver antes de que la página destino termine de renderizar su contenido, no solo antes de que `locator.count()` cuente bien (DEF-01/02), sino también haciendo que un `.fill()` en el primer campo de un formulario recién montado se perdiera silenciosamente. Corregido esperando un elemento exclusivo de cada página destino además de la URL, y leyendo listas con `locator.evaluateAll()` (atómico) en vez de `.count()` + bucle. Confirmado con 80/80 corridas en verde tras el fix.
 
 ### API
 
@@ -115,11 +116,22 @@ La rama de la corrida fallida se eliminó después de capturar la evidencia (nun
 
 - **Un solo framework (Playwright) para UI y API**: simplifica el repositorio, el pipeline y la curva de aprendizaje, en vez de mezclar herramientas distintas para cada capa.
 - **Selección 100% dinámica de productos en los Flujos 1 y 2**: ningún test de esos flujos depende de nombres ni posiciones fijas en el catálogo, cumpliendo explícitamente la consideración del enunciado original. Las pruebas de regresión complementarias (login, carrito básico) sí usan nombres de producto fijos de forma deliberada — no son los casos que exigen selección dinámica, y usar nombres ahí hace esos tests más legibles.
-- **Cero `Thread.sleep()` / esperas fijas**: toda sincronización usa el auto-waiting nativo de Playwright o esperas explícitas (`waitForURL`, `locator.waitFor(...)`, `expect(locator).toX()`). Este principio es, de hecho, la causa raíz documentada de los dos defectos reales encontrados en la primera ejecución (`DEF-01`/`DEF-02`): en los dos lugares donde se usó `locator.count()` sin una espera explícita previa, la suite falló contra el sitio real.
+- **Cero `Thread.sleep()` / esperas fijas**: toda sincronización usa el auto-waiting nativo de Playwright o esperas explícitas (`waitForURL`, `locator.waitFor(...)`, `expect(locator).toX()`). Este principio es, de hecho, la causa raíz documentada de los defectos reales encontrados durante la ejecución (`DEF-01`, `DEF-02`, `DEF-06`): cada vez que una lectura o escritura ocurrió justo después de una navegación sin esperar explícitamente a que la página destino estuviera realmente lista, la suite falló contra el sitio real — ver `documentation/03-reporte-hallazgos.md` para el análisis completo, incluyendo por qué ni siquiera `page.waitForURL()` es, por sí solo, una garantía suficiente.
 - **Ejecución real antes de considerar la entrega terminada**: el código se corrió de punta a punta contra SauceDemo y Restful Booker reales (no solo se validó por lectura), lo que permitió encontrar y corregir bugs de sincronización que una revisión de código no habría detectado.
+- **Locators integrados de Playwright por encima de selectores genéricos**: ver sección "Estrategia de locators" más abajo.
 - **Datos de API únicos por corrida + teardown explícito**: evita colisiones en el ambiente público y compartido de Restful Booker; los tests de API limpian lo que crean.
 - **k6 sobre JMeter**: mismo lenguaje (JS) que el resto del repo, scripting como código versionable (vs. GUI/XML de JMeter), e integración nativa con GitHub Actions vía `grafana/setup-k6-action`.
 - **CI corre solo Chromium**: Firefox y WebKit quedan disponibles para correr cross-browser en local (`npm run test:ui:all-browsers`); limitar CI a un navegador mantiene el pipeline rápido y estable en runners compartidos, una decisión común en equipos reales para no inflar el tiempo de feedback de cada push.
+
+## Estrategia de locators
+
+Los page objects de la suite UI priorizan los locators integrados de Playwright por encima de selectores CSS/atributo escritos a mano, siguiendo el orden que Playwright mismo recomienda en su documentación:
+
+1. **`getByRole` / `getByLabel` / `getByPlaceholder`** — el elemento tiene un rol ARIA y un nombre accesible reales (botones, inputs con `aria-label`, el mensaje de error con `role="alert"`, el combobox de orden). Es la forma en que un usuario real o una tecnología de asistencia identifica el elemento, no un detalle de implementación como una clase CSS — y por eso es más resistente a cambios de estilos/markup que no afectan el significado del elemento.
+2. **`getByTestId`** — cuando el elemento no tiene semántica de rol propia útil (una tarjeta de producto genérica, un `<span>` numérico de badge) pero sí expone un atributo de prueba explícito. SauceDemo usa `data-test` en vez del `data-testid` que Playwright busca por defecto, así que se configuró `testIdAttribute: 'data-test'` en `playwright.config.ts` para poder usar `getByTestId()` en vez de escribir `page.locator('[data-test="..."]')` a mano — sigue siendo el locator integrado, solo apuntando al atributo correcto del sitio.
+3. **Selector CSS/atributo manual (`page.locator(...)`)** — último recurso, reservado para un elemento que de verdad no tenga ni rol accesible ni atributo de prueba. En la práctica, SauceDemo cubre con `data-test` prácticamente todo lo que no tiene rol propio, así que este nivel casi no se necesitó en esta suite; donde sí aparece (por ejemplo, `.querySelector('[data-test="..."]')` *dentro* de un callback de `locator.evaluateAll()`) no es una excepción a esta regla — ahí se está escribiendo JS que corre en el navegador, no usando la API de locators de Playwright, así que no aplica la misma jerarquía.
+
+Por qué importa la diferencia entre niveles 1 y 2: un locator por rol describe *qué es* el elemento para quien lo usa (un botón llamado "Checkout"), mientras que uno por `data-test` solo describe que *alguien lo marcó para pruebas* — sigue siendo mucho más estable que una clase CSS (que cambia por razones de diseño, no de automatización), pero no aporta la misma garantía de que el elemento sea realmente interactuable como lo haría un usuario (ej. un `<div>` con `data-test` puede no ser accesible por teclado; un `<button role="button">` sí lo es por definición). De ahí la prioridad: rol primero, `data-test` después, CSS manual solo si no queda otra opción.
 
 ## Estructura del repositorio
 

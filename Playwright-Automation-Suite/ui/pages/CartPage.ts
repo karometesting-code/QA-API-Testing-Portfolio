@@ -8,47 +8,63 @@ export class CartPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.cartItems = page.locator('.cart_item');
-    this.checkoutButton = page.locator('[data-test="checkout"]');
-    this.cartBadge = page.locator('.shopping_cart_badge');
+    // Mismo data-test="inventory-item" que en el catálogo (es la misma
+    // plantilla de tarjeta de producto) — sin rol propio, de ahí getByTestId.
+    this.cartItems = page.getByTestId('inventory-item');
+    // <button> real con texto "Checkout": rol + nombre accesible directos.
+    this.checkoutButton = page.getByRole('button', { name: 'Checkout' });
+    this.cartBadge = page.getByTestId('shopping-cart-badge');
   }
 
   /**
-   * Misma razón de espera explícita que `InventoryPage.getProductsWithPrices()`:
-   * `locator.count()` no reintenta, así que se espera al primer renglón antes
-   * de contar para evitar leer el carrito a mitad de navegación/render. Se
-   * tolera el timeout (carrito legítimamente vacío) en vez de fallar, porque
-   * a diferencia del catálogo, el carrito sí puede estar vacío en escenarios
-   * válidos (ej. TC-UI-06).
+   * Lectura atómica necesaria — ver el comentario extenso en
+   * `InventoryPage.getProductsWithPrices()` (misma causa raíz, documentada
+   * como DEF-01/DEF-02 en documentation/03-reporte-hallazgos.md): separar
+   * `.count()` de un bucle de `.nth(i)` dejaba una ventana donde el conteo
+   * podía capturar un valor transitorio (restos de la navegación) que ya no
+   * coincidía con el DOM para cuando el bucle lo recorría. `evaluateAll()`
+   * resuelve y extrae todo en una sola llamada atómica. El `waitFor` previo
+   * tolera el timeout porque, a diferencia del catálogo, el carrito sí puede
+   * estar vacío en escenarios válidos (ej. TC-UI-06).
    */
   async getItemsWithPrices(): Promise<{ name: string; price: number; index: number }[]> {
     await this.cartItems.first().waitFor({ state: 'visible' }).catch(() => undefined);
-    const count = await this.cartItems.count();
-    const items: { name: string; price: number; index: number }[] = [];
-    for (let i = 0; i < count; i++) {
-      const row = this.cartItems.nth(i);
-      const name = (await row.locator('.inventory_item_name').innerText()).trim();
-      const priceText = await row.locator('.inventory_item_price').innerText();
-      items.push({ name, price: Number(priceText.replace('$', '')), index: i });
-    }
-    return items;
+    return this.cartItems.evaluateAll((items) =>
+      items.map((item, index) => ({
+        name: (item.querySelector('[data-test="inventory-item-name"]') as HTMLElement).innerText.trim(),
+        price: Number(
+          (item.querySelector('[data-test="inventory-item-price"]') as HTMLElement).innerText.replace('$', '')
+        ),
+        index,
+      }))
+    );
   }
 
   async removeItemByIndex(index: number) {
     const row = this.cartItems.nth(index);
-    await row.locator('button[data-test^="remove"]').click();
+    await row.getByRole('button', { name: 'Remove' }).click();
   }
 
-  /** Lee los nombres de los productos listados en el carrito, en orden de DOM. */
+  /**
+   * Lee los nombres de los productos listados en el carrito, en orden de DOM.
+   * Misma razón de lectura atómica que `getItemsWithPrices()`: una corrida
+   * real en WebKit expuso exactamente este patrón aquí (devolvía los 6
+   * productos del catálogo en vez de los 2 del carrito) cuando el método
+   * solo tenía la espera al primer renglón pero leía con `.allTextContents()`
+   * después de un `.count()` implícito separado — `evaluateAll()` lo evita.
+   */
   async getItemNames(): Promise<string[]> {
-    return this.cartItems.locator('.inventory_item_name').allTextContents();
+    await this.cartItems.first().waitFor({ state: 'visible' }).catch(() => undefined);
+    return this.cartItems.evaluateAll((items) =>
+      items.map((item) => (item.querySelector('[data-test="inventory-item-name"]') as HTMLElement).innerText.trim())
+    );
   }
 
   /** Elimina un producto del carrito por su nombre visible (pruebas de regresión complementarias). */
   async removeProduct(productName: string) {
     await this.cartItems
       .filter({ hasText: productName })
-      .locator('button[data-test^="remove"]')
+      .getByRole('button', { name: 'Remove' })
       .click();
   }
 
@@ -59,7 +75,18 @@ export class CartPage {
     return Number(text);
   }
 
+  /**
+   * Navega a checkout-step-one y espera a que su contenido propio (el campo
+   * "First Name") esté realmente presente antes de devolver el control.
+   * Mismo defecto que DEF-06 (ver documentation/03-reporte-hallazgos.md): sin
+   * esta espera, `CheckoutPage.fillInfo()` podía llenar el primer campo
+   * ("First Name") mientras la página todavía estaba terminando de
+   * renderizar/hidratar, y el valor se perdía (el campo quedaba vacío pese a
+   * que `.fill()` no reportaba ningún error) — reproducido en dos pruebas
+   * distintas de este archivo, siempre en el primer campo del formulario.
+   */
   async goToCheckout() {
     await this.checkoutButton.click();
+    await this.page.getByLabel('First Name').waitFor({ state: 'visible' });
   }
 }
