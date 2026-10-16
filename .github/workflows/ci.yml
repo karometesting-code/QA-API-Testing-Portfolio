@@ -1,10 +1,28 @@
 name: Playwright Automation Suite - CI
 
+# GitHub Actions solo descubre workflows en .github/workflows/ en la RAÍZ del
+# repositorio — por eso este archivo vive aquí y no dentro de
+# Playwright-Automation-Suite/, aunque gobierna únicamente ese proyecto (este
+# repositorio es un portafolio con varios proyectos independientes). Los
+# `paths` filters de abajo evitan que el pipeline corra por cambios en los
+# otros proyectos (Jira, Postman), y `working-directory` acota cada `run:` a
+# la carpeta del proyecto.
+
 on:
   push:
     branches: ['**']
+    paths:
+      - 'Playwright-Automation-Suite/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: ['**']
+    paths:
+      - 'Playwright-Automation-Suite/**'
+      - '.github/workflows/ci.yml'
+
+defaults:
+  run:
+    working-directory: Playwright-Automation-Suite
 
 jobs:
   ui-and-api-tests:
@@ -19,6 +37,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: Playwright-Automation-Suite/package-lock.json
 
       - name: Instalar dependencias
         run: npm ci
@@ -42,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-html-report
-          path: reports/html-report
+          path: Playwright-Automation-Suite/reports/html-report
           retention-days: 15
 
       - name: Publicar reporte JUnit como artefacto
@@ -50,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-junit-report
-          path: reports/junit
+          path: Playwright-Automation-Suite/reports/junit
           retention-days: 15
 
       - name: Marcar pipeline como fallido si las pruebas fallaron
@@ -84,5 +103,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: k6-performance-report
-          path: reports/performance
+          path: Playwright-Automation-Suite/reports/performance
           retention-days: 15

@@ -68,7 +68,7 @@ npm run perf:booking
 
 - Playwright genera automáticamente reporte HTML (`reports/html-report/`) y JUnit XML (`reports/junit/`) en cada corrida (ver `playwright.config.ts`).
 - k6 imprime un resumen en consola y guarda `reports/performance/k6-summary.json` (+ `k6-result.json` con el detalle punto a punto si se usa `--out json=...`).
-- En CI, ambos reportes se publican como artefactos descargables del workflow (ver pestaña *Actions* del repositorio).
+- En CI, ambos reportes se publican como artefactos descargables del workflow (ver pestaña *Actions* del repositorio). El workflow vive en `/.github/workflows/ci.yml` (raíz del repositorio, no en esta carpeta) porque GitHub Actions solo descubre workflows ahí; está acotado a este proyecto con `paths` filters y `working-directory`.
 
 ## Resultados (última ejecución real — 15/10/2026)
 
@@ -97,6 +97,10 @@ Prueba de carga real con k6 v2.2.0 sobre `GET /booking` (10 VUs, ramp-up 30s, 2m
 | % de errores | 0.09% (1/1138, falla de DNS del cliente, no del servidor) | < 5% | ✅ |
 
 **Conclusión formal:** sí, el endpoint soporta adecuadamente la carga definida — los tres umbrales se cumplieron con holgura de más de 5x y la tasa de error atribuible al servidor fue 0%. Análisis completo, con matices sobre el alcance de esta conclusión, en [`documentation/01-estrategia-de-pruebas.md`](documentation/01-estrategia-de-pruebas.md).
+
+### Pipeline CI/CD
+
+El primer push con el workflow reveló un quinto hallazgo (`DEF-05`, crítico): el archivo estaba en `Playwright-Automation-Suite/.github/workflows/ci.yml`, una ruta que GitHub Actions no indexa (solo descubre workflows en `.github/workflows/` en la raíz del repositorio) — confirmado vía la API de GitHub (`"total_count": 0` workflows registrados). Corregido moviendo el archivo a la raíz del repo con `paths` filters acotando el pipeline a este proyecto. Ver evidencia de ejecución exitosa/fallida en la pestaña *Actions* del repositorio.
 
 ## Decisiones técnicas relevantes
 
@@ -132,8 +136,6 @@ Playwright-Automation-Suite/
 │   └── utils/
 ├── performance/
 │   └── load-test-booking.js   # Script k6
-├── .github/workflows/
-│   └── ci.yml            # Pipeline CI/CD
 ├── reports/               # Reportes generados (gitignored salvo estructura)
 ├── documentation/
 │   ├── 01-estrategia-de-pruebas.md

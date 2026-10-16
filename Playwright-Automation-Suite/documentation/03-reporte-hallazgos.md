@@ -1,6 +1,6 @@
 # Reporte de hallazgos
 
-> Esta suite se ejecutó de punta a punta contra `saucedemo.com` y `restful-booker.herokuapp.com` el 15/10/2026 (ver `README.md`, sección Resultados, para el resumen de la corrida). Los tres hallazgos de esta sección provienen de esa ejecución real, no de hipótesis.
+> Esta suite se ejecutó de punta a punta contra `saucedemo.com` y `restful-booker.herokuapp.com` el 15/10/2026 (ver `README.md`, sección Resultados, para el resumen de la corrida). Los hallazgos de esta sección provienen de esa ejecución real, no de hipótesis.
 
 ## Plantilla de defecto
 
@@ -81,3 +81,19 @@
 | **Corrección aplicada** | Cast explícito y documentado (`newBooking as unknown as Record<string, unknown>`) en la línea del `toMatchObject`. Se agregó `npm run typecheck` como script y como paso del pipeline de CI (antes de ejecutar las pruebas), para que este tipo de defecto no pueda volver a pasar inadvertido. |
 | **Evidencia** | Salida de `npx tsc --noEmit` antes y después del fix (limpia tras la corrección) |
 | **Ambiente** | TypeScript 5.6, `tsconfig.json` con `"strict": true` |
+
+## DEF-05 — El pipeline de CI nunca se habría ejecutado: workflow ubicado fuera de donde GitHub Actions lo busca (CORREGIDO)
+
+| Campo | Valor |
+|---|---|
+| **ID** | DEF-05 |
+| **Título** | `ci.yml` estaba en `Playwright-Automation-Suite/.github/workflows/`, una ruta que GitHub Actions no indexa |
+| **Descripción** | GitHub Actions descubre workflows **únicamente** en `.github/workflows/` en la **raíz** del repositorio. Como este repositorio es un portafolio monorepo (varios proyectos en subcarpetas), el archivo quedó anidado dentro de `Playwright-Automation-Suite/.github/workflows/ci.yml` — una ruta válida en el sistema de archivos, pero invisible para GitHub Actions. El pipeline nunca se habría disparado con ningún `push`, aunque el YAML en sí era válido. |
+| **Pasos para reproducir** | 1. Hacer push de un commit que agrega `Playwright-Automation-Suite/.github/workflows/ci.yml`. 2. Consultar `GET /repos/{owner}/{repo}/actions/workflows` vía la API de GitHub. |
+| **Resultado esperado** | El workflow aparece listado y se dispara en el push |
+| **Resultado actual (antes del fix)** | `{"total_count": 0, "workflows": []}` — cero workflows registrados pese al push exitoso del archivo (confirmado vía API real tras el primer push de esta entrega) |
+| **Severidad** | Crítica (invalidaba por completo el entregable "Pipeline CI/CD funcional con evidencia de ejecución") |
+| **Causa raíz** | Desconocimiento/descuido de la restricción de ubicación de GitHub Actions en un repositorio multi-proyecto. |
+| **Corrección aplicada** | Se movió el archivo a `/.github/workflows/ci.yml` (raíz del repo). Se agregaron `paths` filters (`Playwright-Automation-Suite/**`) para que el pipeline no se dispare por cambios en los otros proyectos del portafolio (Jira, Postman), y `defaults.run.working-directory: Playwright-Automation-Suite` para que los pasos `run:` operen dentro de la carpeta del proyecto sin repetir `cd` en cada comando. |
+| **Evidencia** | Respuesta de la API antes (`total_count: 0`) vs. después del fix — ver el primer run real en la pestaña *Actions* del repositorio |
+| **Ambiente** | `github.com/karometesting-code/QA-API-Testing-Portfolio`, GitHub Actions, 15/10/2026 |
