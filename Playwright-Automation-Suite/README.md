@@ -65,6 +65,37 @@ npm run perf:booking           # k6 (requiere k6 instalado)
 - En CI ambos se publican como artefactos descargables (pestaña *Actions*)
 - El workflow vive en `/.github/workflows/ci.yml` (raíz del repo, no en esta carpeta) — GitHub Actions solo descubre workflows ahí (ver `DEF-05`)
 
+### Qué deberías ver al correr `npm run test:all`
+
+```
+Running 15 tests using 2 workers
+
+  ok  1 [ui-chromium] › flow1-purchase.spec.ts:23:7 › TC-UI-01: ...
+  ok  2 [ui-chromium] › flow2-cart.spec.ts:23:7 › TC-UI-04: ...
+  ok  3 [ui-chromium] › login.spec.ts:17:7 › ...
+  ... (12 más)
+
+  15 passed (13s)
+```
+
+- **Artefactos generados:** `reports/html-report/index.html` (abrir con `npm run test:report`) y `reports/junit/results.xml`
+- **Si algo falla:** Playwright guarda screenshot, video y traza en `test-results/` — útil para diagnosticar sin volver a correr
+
+### Qué deberías ver al correr `npm run perf:booking`
+
+```
+=== Resumen de carga: GET /booking ===
+VUs objetivo: 10 | Ramp-up: 30s | Duración sostenida: 2m
+Peticiones totales: 1138
+Tiempo promedio de respuesta: 219.91 ms
+P90: 238.29 ms
+P95: 299.78 ms
+Throughput (req/s): 7.07
+% de errores: 0.09%
+```
+
+(Los números exactos varían según la red del momento — los de arriba son los de la corrida real documentada en `01-estrategia-de-pruebas.md`.) También guarda `reports/performance/k6-summary.json`.
+
 ## Resultados (última ejecución real)
 
 **39/39 tests UI** en verde (Chromium + Firefox + WebKit) · **3/3 tests API** en verde · **`npm run typecheck`** limpio
