@@ -4,6 +4,20 @@ Suite de automatización end-to-end: UI y API con Playwright, rendimiento con k6
 
 Ejecutada de punta a punta contra las apps reales, no solo escrita. Esa ejecución real encontró y corrigió **6 defectos documentados** — ver [`documentation/03-reporte-hallazgos.md`](documentation/03-reporte-hallazgos.md).
 
+## Inicio rápido
+
+```bash
+git clone https://github.com/karometesting-code/QA-API-Testing-Portfolio.git
+cd QA-API-Testing-Portfolio/Playwright-Automation-Suite
+
+npm install
+npx playwright install --with-deps chromium
+
+npm run test:all
+```
+
+Debería ver `15 passed` en la terminal. Más comandos, salida esperada de cada uno y variantes (todos los navegadores, performance, etc.) en [Instalación y ejecución](#instalación-y-ejecución) más abajo.
+
 ## Qué cubre
 
 | Capa | Herramienta | Qué valida |
