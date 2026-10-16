@@ -100,7 +100,16 @@ Prueba de carga real con k6 v2.2.0 sobre `GET /booking` (10 VUs, ramp-up 30s, 2m
 
 ### Pipeline CI/CD
 
-El primer push con el workflow reveló un quinto hallazgo (`DEF-05`, crítico): el archivo estaba en `Playwright-Automation-Suite/.github/workflows/ci.yml`, una ruta que GitHub Actions no indexa (solo descubre workflows en `.github/workflows/` en la raíz del repositorio) — confirmado vía la API de GitHub (`"total_count": 0` workflows registrados). Corregido moviendo el archivo a la raíz del repo con `paths` filters acotando el pipeline a este proyecto. Ver evidencia de ejecución exitosa/fallida en la pestaña *Actions* del repositorio.
+El primer push con el workflow reveló un quinto hallazgo (`DEF-05`, crítico): el archivo estaba en `Playwright-Automation-Suite/.github/workflows/ci.yml`, una ruta que GitHub Actions no indexa (solo descubre workflows en `.github/workflows/` en la raíz del repositorio) — confirmado vía la API de GitHub (`"total_count": 0` workflows registrados). Corregido moviendo el archivo a la raíz del repo con `paths` filters acotando el pipeline a este proyecto.
+
+Evidencia real de ambos escenarios pedidos por el enunciado:
+
+| Corrida | Resultado | Detalle |
+|---|---|---|
+| [Run #1 — main, commit `7b3e036`](https://github.com/karometesting-code/QA-API-Testing-Portfolio/actions/runs/38827004657) | ✅ Exitosa | 14/14 pasos en verde (incluye `typecheck`), job de performance corrido, 3 artefactos publicados (`playwright-html-report`, `playwright-junit-report`, `k6-performance-report`) |
+| [Run #2 — rama `evidence/ci-failing-run` (temporal, ya eliminada)](https://github.com/karometesting-code/QA-API-Testing-Portfolio/actions/runs/38828517953) | ❌ Fallida (intencional) | TC-UI-04 roto a propósito (badge esperado `'99'` en vez de `'2'`) para demostrar que el pipeline detecta y reporta un fallo real: el job de pruebas terminó en `failure`, el job de performance se saltó por la dependencia no satisfecha (`needs`), y los reportes HTML/JUnit se publicaron igual gracias al `if: always()` en los pasos de artefactos |
+
+La rama de la corrida fallida se eliminó después de capturar la evidencia (nunca se mezcló a `main`); el run en sí queda permanentemente visible en la pestaña *Actions* del repositorio, enlazado por su commit, independientemente de que la rama ya no exista.
 
 ## Decisiones técnicas relevantes
 
